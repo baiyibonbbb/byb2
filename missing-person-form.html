@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寻人启事辅助工具</title>
+    <link rel="stylesheet" href="missing-person-form.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>寻人启事辅助工具</h1>
+            <p>填写以下信息，快速生成格式规范的寻人启事</p>
+        </header>
+
+        <main>
+            <section class="form-section">
+                <h2>基本信息</h2>
+                <form id="missingPersonForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">姓名 <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" required placeholder="请输入失踪人员姓名">
+                        </div>
+                        <div class="form-group">
+                            <label for="age">年龄 <span class="required">*</span></label>
+                            <input type="number" id="age" name="age" required min="0" max="120" placeholder="请输入年龄">
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">性别 <span class="required">*</span></label>
+                            <select id="gender" name="gender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="height">身高 (cm)</label>
+                            <input type="number" id="height" name="height" min="50" max="250" placeholder="请输入身高">
+                        </div>
+                        <div class="form-group">
+                            <label for="weight">体重 (kg)</label>
+                            <input type="number" id="weight" name="weight" min="1" max="300" placeholder="请输入体重">
+                        </div>
+                        <div class="form-group">
+                            <label for="build">体型</label>
+                            <select id="build" name="build">
+                                <option value="">请选择</option>
+                                <option value="偏瘦">偏瘦</option>
+                                <option value="中等">中等</option>
+                                <option value="偏胖">偏胖</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h2>外貌特征</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="hair">发型/发色</label>
+                            <input type="text" id="hair" name="hair" placeholder="例如：短发、黑色、卷发等">
+                        </div>
+                        <div class="form-group">
+                            <label for="clothes">失踪时穿着</label>
+                            <input type="text" id="clothes" name="clothes" placeholder="请描述失踪时的着装">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="features">特殊特征</label>
+                        <textarea id="features" name="features" rows="3" placeholder="例如：胎记、疤痕、残疾等特殊识别特征"></textarea>
+                    </div>
+
+                    <h2>失踪信息</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="missingDate">失踪日期 <span class="required">*</span></label>
+                            <input type="date" id="missingDate" name="missingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="missingTime">失踪时间</label>
+                            <input type="time" id="missingTime" name="missingTime">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="missingLocation">失踪地点 <span class="required">*</span></label>
+                        <input type="text" id="missingLocation" name="missingLocation" required placeholder="请详细描述失踪地点">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="circumstances">失踪情况描述</label>
+                        <textarea id="circumstances" name="circumstances" rows="3" placeholder="请描述失踪的具体情况、最后出现的位置等信息"></textarea>
+                    </div>
+
+                    <h2>联系方式</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactName">联系人姓名 <span class="required">*</span></label>
+                            <input type="text" id="contactName" name="contactName" required placeholder="请输入联系人姓名">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">联系电话 <span class="required">*</span></label>
+                            <input type="tel" id="contactPhone" name="contactPhone" required placeholder="请输入联系电话">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactRelation">与失踪人员关系</label>
+                        <input type="text" id="contactRelation" name="contactRelation" placeholder="例如：父亲、母亲、朋友等">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reward">悬赏金额 (选填)</label>
+                        <input type="text" id="reward" name="reward" placeholder="请输入悬赏金额（可选）">
+                    </div>
+
+                    <h2>图片上传</h2>
+                    <div class="image-upload-section">
+                        <div class="upload-container">
+                            <input type="file" id="imageUpload" name="image" accept="image/*">
+                            <label for="imageUpload" class="upload-label">
+                                <span class="upload-icon">+</span>
+                                <span class="upload-text">点击上传照片</span>
+                                <small>支持JPG、PNG格式，建议不超过5MB</small>
+                            </label>
+                        </div>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="previewImg" src="" alt="预览图片">
+                            <button type="button" id="removeImage" class="remove-image-btn">移除图片</button>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="generateNotice" class="btn btn-primary">生成寻人启事</button>
+                        <button type="reset" class="btn btn-secondary">重置表单</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="noticePreview" class="notice-preview-section hidden">
+                <div class="preview-header">
+                    <h2>寻人启事预览</h2>
+                    <div class="preview-actions">
+                        <button type="button" id="printNotice" class="btn btn-print">打印</button>
+                        <button type="button" id="downloadPDF" class="btn btn-download">导出PDF</button>
+                        <button type="button" id="editNotice" class="btn btn-edit">编辑信息</button>
+                    </div>
+                </div>
+                
+                <div id="noticeContent" class="notice-content">
+                    <!-- 这里将通过JavaScript动态生成寻人启事内容 -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>紧急情况请立即拨打：110（报警电话） / 119（消防救援） / 120（急救中心）</p>
+            <p>本工具仅提供辅助功能，不构成法律建议</p>
+        </footer>
+    </div>
+
+    <script src="missing-person-form.js"></script>
+</body>
+</html>
