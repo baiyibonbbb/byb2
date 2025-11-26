@@ -1,6 +1,7 @@
 // 全局变量存储表单数据和图片
 let formData = {};
 let uploadedImage = null;
+const STORAGE_KEY = 'missingPersonFormData'; // 本地存储键名
 
 // DOM 元素
 const form = document.getElementById('missingPersonForm');
@@ -18,6 +19,11 @@ const contactPhoneInput = document.getElementById('contactPhone');
 const ageInput = document.getElementById('age');
 const heightInput = document.getElementById('height');
 const weightInput = document.getElementById('weight');
+const missingDateInput = document.getElementById('missingDate');
+const contactNameInput = document.getElementById('contactName');
+const nameInput = document.getElementById('name');
+const missingLocationInput = document.getElementById('missingLocation');
+const rewardInput = document.getElementById('reward');
 
 // 初始化函数
 function init() {
@@ -62,22 +68,222 @@ function bindEventListeners() {
     // 编辑信息
     editNoticeBtn.addEventListener('click', showForm);
     
-    // 表单字段验证
+    // 表单字段验证 - 添加实时验证
     contactPhoneInput.addEventListener('input', validatePhone);
+    contactPhoneInput.addEventListener('blur', validatePhone);
+    
     ageInput.addEventListener('input', validateNumberInput);
+    ageInput.addEventListener('blur', validateAgeRange);
+    
     heightInput.addEventListener('input', validateNumberInput);
+    heightInput.addEventListener('blur', validateHeightRange);
+    
     weightInput.addEventListener('input', validateNumberInput);
+    weightInput.addEventListener('blur', validateWeightRange);
+    
+    nameInput.addEventListener('input', validateName);
+    nameInput.addEventListener('blur', validateName);
+    
+    missingLocationInput.addEventListener('input', validateLocation);
+    missingLocationInput.addEventListener('blur', validateLocation);
+    
+    contactNameInput.addEventListener('input', validateContactName);
+    contactNameInput.addEventListener('blur', validateContactName);
+    
+    missingDateInput.addEventListener('change', validateMissingDate);
+    
+    rewardInput.addEventListener('input', validateReward);
+    rewardInput.addEventListener('blur', validateReward);
+    
+    // 为所有必填字段添加input事件监听器，用于即时清除错误样式
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.classList.contains('error')) {
+                removeErrorStyle(this);
+            }
+        });
+    });
+    
+    // 绑定表单自动保存事件
+    bindAutoSave();
+    
+    // 尝试从本地存储恢复表单数据
+    setTimeout(() => {
+        restoreFormData();
+    }, 100);
 }
 
 // 验证电话号码
 function validatePhone(e) {
     const phone = e.target.value;
-    const phoneRegex = /^1[3-9]\d{9}$/;
-    const isValid = phone === '' || phoneRegex.test(phone);
+    // 支持中国手机号和固定电话
+    const phoneRegex = /^(1[3-9]\d{9})$|^((0\d{2,3}-?)?\d{7,8})$/;
     
-    if (!isValid) {
-        e.target.setCustomValidity('请输入有效的手机号码');
-        addErrorStyle(e.target);
+    if (phone === '') {
+        // 空值时不报错，但保持required属性的作用
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    if (!phoneRegex.test(phone)) {
+        e.target.setCustomValidity('请输入有效的手机号码（11位数字）或固定电话');
+        addErrorStyle(e.target, '请输入有效的手机号码（11位数字）或固定电话');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证姓名
+function validateName(e) {
+    const name = e.target.value.trim();
+    
+    if (name === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    // 中文姓名或英文姓名，长度2-20
+    const nameRegex = /^[\u4e00-\u9fa5a-zA-Z·]{2,20}$/;
+    if (!nameRegex.test(name)) {
+        e.target.setCustomValidity('请输入有效的姓名（2-20个字符）');
+        addErrorStyle(e.target, '请输入有效的姓名（2-20个字符）');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证年龄范围
+function validateAgeRange(e) {
+    const age = parseInt(e.target.value);
+    
+    if (isNaN(age) || e.target.value === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    if (age < 0 || age > 120) {
+        e.target.setCustomValidity('年龄应在0-120岁之间');
+        addErrorStyle(e.target, '年龄应在0-120岁之间');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证身高范围
+function validateHeightRange(e) {
+    const height = parseInt(e.target.value);
+    
+    if (isNaN(height) || e.target.value === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    if (height < 50 || height > 250) {
+        e.target.setCustomValidity('身高应在50-250cm之间');
+        addErrorStyle(e.target, '身高应在50-250cm之间');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证体重范围
+function validateWeightRange(e) {
+    const weight = parseInt(e.target.value);
+    
+    if (isNaN(weight) || e.target.value === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    if (weight < 1 || weight > 300) {
+        e.target.setCustomValidity('体重应在1-300kg之间');
+        addErrorStyle(e.target, '体重应在1-300kg之间');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证失踪日期
+function validateMissingDate(e) {
+    const missingDate = new Date(e.target.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 不允许选择未来日期
+    if (missingDate > today) {
+        e.target.setCustomValidity('失踪日期不能是未来日期');
+        addErrorStyle(e.target, '失踪日期不能是未来日期');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证联系姓名
+function validateContactName(e) {
+    const name = e.target.value.trim();
+    
+    if (name === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    const nameRegex = /^[\u4e00-\u9fa5a-zA-Z·]{2,20}$/;
+    if (!nameRegex.test(name)) {
+        e.target.setCustomValidity('请输入有效的联系人姓名（2-20个字符）');
+        addErrorStyle(e.target, '请输入有效的联系人姓名（2-20个字符）');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证失踪地点
+function validateLocation(e) {
+    const location = e.target.value.trim();
+    
+    if (location === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    if (location.length < 4 || location.length > 100) {
+        e.target.setCustomValidity('请输入详细的失踪地点（4-100个字符）');
+        addErrorStyle(e.target, '请输入详细的失踪地点（4-100个字符）');
+    } else {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+    }
+}
+
+// 验证悬赏金额
+function validateReward(e) {
+    const reward = e.target.value.trim();
+    
+    if (reward === '') {
+        e.target.setCustomValidity('');
+        removeErrorStyle(e.target);
+        return;
+    }
+    
+    // 支持中文数字和阿拉伯数字格式
+    const rewardRegex = /^[\d零一二三四五六七八九十百千万亿]+(元|人民币)?$/;
+    if (!rewardRegex.test(reward)) {
+        e.target.setCustomValidity('请输入有效的悬赏金额');
+        addErrorStyle(e.target, '请输入有效的悬赏金额，例如：1000元、壹仟元');
     } else {
         e.target.setCustomValidity('');
         removeErrorStyle(e.target);
@@ -97,15 +303,29 @@ function validateNumberInput(e) {
 }
 
 // 添加错误样式
-function addErrorStyle(element) {
+function addErrorStyle(element, customMessage = null) {
     element.classList.add('error');
     const formGroup = element.closest('.form-group');
-    if (formGroup && !formGroup.querySelector('.error-message')) {
+    if (formGroup) {
+        // 移除已存在的错误信息
+        const existingError = formGroup.querySelector('.error-message');
+        if (existingError) {
+            formGroup.removeChild(existingError);
+        }
+        
+        // 添加新的错误信息
         const errorMessage = document.createElement('small');
         errorMessage.className = 'error-message';
-        errorMessage.textContent = element.validationMessage || '请检查输入';
+        errorMessage.textContent = customMessage || element.validationMessage || '请检查输入';
         errorMessage.style.color = '#e74c3c';
+        errorMessage.style.fontWeight = '500';
         formGroup.appendChild(errorMessage);
+        
+        // 添加抖动动画效果
+        element.style.animation = 'shake 0.5s ease-in-out';
+        setTimeout(() => {
+            element.style.animation = 'none';
+        }, 500);
     }
 }
 
@@ -123,18 +343,53 @@ function removeErrorStyle(element) {
 function validateForm() {
     let isValid = true;
     
-    // 获取所有必填字段
-    const requiredFields = form.querySelectorAll('[required]');
+    // 获取所有字段
+    const allFields = form.querySelectorAll('input, select, textarea');
     
+    // 首先清除所有错误样式
+    allFields.forEach(field => {
+        removeErrorStyle(field);
+    });
+    
+    // 自动保存表单数据
+    saveFormData();
+    
+    // 触发各个字段的验证函数
+    validateName({ target: nameInput });
+    validatePhone({ target: contactPhoneInput });
+    validateContactName({ target: contactNameInput });
+    validateMissingDate({ target: missingDateInput });
+    validateLocation({ target: missingLocationInput });
+    
+    // 数字字段验证
+    if (ageInput.value) validateAgeRange({ target: ageInput });
+    if (heightInput.value) validateHeightRange({ target: heightInput });
+    if (weightInput.value) validateWeightRange({ target: weightInput });
+    if (rewardInput.value) validateReward({ target: rewardInput });
+    
+    // 检查必填字段
+    const requiredFields = form.querySelectorAll('[required]');
     requiredFields.forEach(field => {
         if (!field.checkValidity()) {
             isValid = false;
-            field.reportValidity();
-            addErrorStyle(field);
-        } else {
-            removeErrorStyle(field);
+            addErrorStyle(field, field.validationMessage || '此字段为必填项');
+            
+            // 如果是首次发现的错误字段，滚动到该字段
+            if (isValid === false) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                field.focus();
+            }
         }
     });
+    
+    // 检查是否有任何字段带有错误样式
+    const fieldsWithErrors = form.querySelectorAll('.error');
+    if (fieldsWithErrors.length > 0) {
+        isValid = false;
+        
+        // 如果有错误，显示一个综合提示
+        showNotification('请检查表单中的错误并修正', 'error');
+    }
     
     return isValid;
 }
@@ -221,6 +476,9 @@ function handleImageUpload(e) {
         }, 50);
         
         showNotification('图片上传成功', 'success');
+        
+        // 保存图片数据到本地存储
+        saveFormData();
     };
     
     reader.onerror = function() {
@@ -244,6 +502,9 @@ function handleRemoveImage() {
         uploadedImage = null;
         previewImg.style.opacity = '1'; // 重置透明度为下一次使用
         previewImg.style.transition = 'none'; // 重置过渡效果
+        
+        // 更新本地存储
+        saveFormData();
     }, 300);
     
     showNotification('图片已移除', 'info');
@@ -857,6 +1118,13 @@ document.addEventListener('DOMContentLoaded', function() {
             100% { transform: rotate(360deg); }
         }
         
+        /* 错误抖动动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
         /* 通知样式 */
         .notification {
             position: fixed;
@@ -915,4 +1183,112 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 3000);
+}
+
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 绑定表单自动保存事件
+function bindAutoSave() {
+    // 监听表单输入变化
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', debounce(saveFormData, 500));
+        input.addEventListener('change', saveFormData);
+    });
+}
+
+// 保存表单数据到本地存储
+function saveFormData() {
+    try {
+        // 收集表单数据
+        const formElements = form.elements;
+        const data = {};
+        
+        for (let i = 0; i < formElements.length; i++) {
+            const element = formElements[i];
+            const name = element.name;
+            
+            if (name && element.type !== 'file') {
+                data[name] = element.value;
+            }
+        }
+        
+        // 添加图片信息
+        data.image = uploadedImage;
+        
+        // 保存到本地存储
+        const saveData = {
+            formData: data,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+        
+    } catch (error) {
+        console.error('保存表单数据失败:', error);
+    }
+}
+
+// 从本地存储恢复表单数据
+function restoreFormData() {
+    try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            
+            // 如果有保存的数据，显示恢复提示
+            if (Object.keys(parsedData.formData).length > 0 || parsedData.formData.image) {
+                const lastSaved = new Date(parsedData.timestamp).toLocaleString();
+                
+                if (confirm(`检测到上次保存的表单数据（保存时间：${lastSaved}），是否恢复？`)) {
+                    // 恢复表单字段
+                    const data = parsedData.formData;
+                    const formElements = form.elements;
+                    
+                    for (let i = 0; i < formElements.length; i++) {
+                        const element = formElements[i];
+                        const name = element.name;
+                        
+                        if (name && element.type !== 'file' && data[name] !== undefined) {
+                            element.value = data[name];
+                        }
+                    }
+                    
+                    // 恢复图片
+                    if (data.image) {
+                        uploadedImage = data.image;
+                        previewImg.src = data.image;
+                        imagePreview.classList.remove('hidden');
+                    }
+                    
+                    showNotification('表单数据已恢复', 'success');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('恢复表单数据失败:', error);
+    }
+}
+
+// 清除本地存储的表单数据
+function clearFormStorage() {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        showNotification('已清除本地存储的表单数据', 'success');
+    } catch (error) {
+        console.error('清除表单数据失败:', error);
+        showNotification('清除表单数据失败', 'error');
+    }
 }
