@@ -321,6 +321,22 @@ main {
     background-color: #e67e22;
 }
 
+/* 分享按钮样式 */
+.btn-share {
+    white-space: nowrap;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    background-color: #9b59b6;
+    color: white;
+}
+
+.btn-share:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #8e44ad;
+}
+
 /* 寻人启事内容样式 */
 .notice-content {
     border: 2px solid var(--border-color);

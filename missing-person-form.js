@@ -795,15 +795,30 @@ function bindPDFDownload() {
 
 // 添加分享功能
 function addShareFunctionality() {
-    // 检查浏览器是否支持分享API
-    if (navigator.share) {
-        // 创建分享按钮
-        const previewActions = document.querySelector('.preview-actions');
-        if (previewActions) {
+    const previewActions = document.querySelector('.preview-actions');
+    if (previewActions) {
+        // 创建通用分享文本
+        const getShareText = () => {
+            return `【寻人启事】寻找${formData.name || '未知人员'}，${formData.age || ''}岁，${formData.gender || ''}，${formData.missingLocation ? `于${formData.missingDate}在${formData.missingLocation}失踪` : ''}。如有线索请联系：${formData.contactPhone || ''}`;
+        };
+        
+        // 复制文本到剪贴板的函数
+        const copyToClipboard = async (text, platform) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification(`已复制分享内容，请打开${platform}进行粘贴分享`, 'success');
+            } catch (err) {
+                showNotification(`复制失败，请手动选择文本进行分享`, 'error');
+                console.error('复制失败:', err);
+            }
+        };
+        
+        // 浏览器原生分享API
+        if (navigator.share) {
             const shareBtn = document.createElement('button');
             shareBtn.type = 'button';
             shareBtn.className = 'btn btn-share';
-            shareBtn.textContent = '分享';
+            shareBtn.textContent = '系统分享';
             shareBtn.style.backgroundColor = '#27ae60';
             shareBtn.style.color = 'white';
             
@@ -811,7 +826,7 @@ function addShareFunctionality() {
                 try {
                     await navigator.share({
                         title: `寻人启事 - ${formData.name || '未知人员'}`,
-                        text: `寻找${formData.name || '未知人员'}，${formData.age || ''}岁，${formData.gender || ''}，${formData.missingLocation ? `于${formData.missingDate}在${formData.missingLocation}失踪` : ''}。如有线索请联系：${formData.contactPhone || ''}`,
+                        text: getShareText(),
                         url: window.location.href
                     });
                     showNotification('分享成功', 'success');
@@ -825,6 +840,50 @@ function addShareFunctionality() {
             
             previewActions.appendChild(shareBtn);
         }
+        
+        // 创建抖音分享按钮
+        const douyinBtn = document.createElement('button');
+        douyinBtn.type = 'button';
+        douyinBtn.className = 'btn btn-share';
+        douyinBtn.textContent = '抖音分享';
+        douyinBtn.style.backgroundColor = '#000000';
+        douyinBtn.style.color = 'white';
+        
+        douyinBtn.addEventListener('click', () => {
+            const shareText = getShareText();
+            copyToClipboard(shareText, '抖音');
+        });
+        
+        // 创建快手分享按钮
+        const kuaishouBtn = document.createElement('button');
+        kuaishouBtn.type = 'button';
+        kuaishouBtn.className = 'btn btn-share';
+        kuaishouBtn.textContent = '快手分享';
+        kuaishouBtn.style.backgroundColor = '#FF5050';
+        kuaishouBtn.style.color = 'white';
+        
+        kuaishouBtn.addEventListener('click', () => {
+            const shareText = getShareText();
+            copyToClipboard(shareText, '快手');
+        });
+        
+        // 创建哔哩哔哩分享按钮
+        const bilibiliBtn = document.createElement('button');
+        bilibiliBtn.type = 'button';
+        bilibiliBtn.className = 'btn btn-share';
+        bilibiliBtn.textContent = '哔哩哔哩';
+        bilibiliBtn.style.backgroundColor = '#FB7299';
+        bilibiliBtn.style.color = 'white';
+        
+        bilibiliBtn.addEventListener('click', () => {
+            const shareText = getShareText();
+            copyToClipboard(shareText, '哔哩哔哩');
+        });
+        
+        // 添加分享按钮到预览操作区域
+        previewActions.appendChild(douyinBtn);
+        previewActions.appendChild(kuaishouBtn);
+        previewActions.appendChild(bilibiliBtn);
     }
 }
 
